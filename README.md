@@ -47,7 +47,8 @@ Ce projet vise à classifier automatiquement les genres musicaux en utilisant le
 - Une analyse des erreurs de classification pour améliorer les performances du modèle.
 
 ## Auteurs
-- [Votre Nom]
+- Maxens SOLDAN
+- Baptiste RENAND 
 
 ## Licence
 Ce projet est sous licence MIT.
