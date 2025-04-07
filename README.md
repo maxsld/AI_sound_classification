@@ -35,11 +35,11 @@ Ce projet vise à classifier automatiquement les genres musicaux en utilisant le
 1. **Cloner le dépôt**
    ```bash
    git clone <URL_du_repo>
-   cd music-genre-classification
+   cd AI_sound_classification
    ```
 2. **Exécuter le script de classification**
    ```bash
-   python main.py
+   python app.py
    ```
 
 ## Résultats attendus
