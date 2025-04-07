@@ -11,17 +11,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import NearestCentroid
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
+import seaborn as sns
 
 # Charger les données
 df = pd.read_csv("MusicGenre/features_30_sec.csv")
-
-# Extraction des caractéristiques spectrales
-def extract_features(file_path):
-    y, sr = librosa.load(file_path, duration=30)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-    spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
-    return np.hstack((np.mean(mfccs, axis=1), np.mean(chroma, axis=1), np.mean(spectrogram, axis=1)))
 
 # Séparer les features et les labels
 X = df.drop(columns=["filename", "label"])
@@ -40,10 +33,23 @@ X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_encoded, test_si
 # Validation croisée k-fold
 k = 5
 
+# Fonction d'évaluation
 def evaluate_model(model, name):
     scores = cross_val_score(model, X_train, y_train, cv=k)
     print(f"{name} - Validation croisée ({k}-fold) - Score moyen: {scores.mean():.2f}")
     return scores.mean()
+
+# Fonction pour afficher la matrice de confusion
+def plot_confusion_matrix(y_true, y_pred, model_name):
+    conf_matrix = confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=LabelEncoder().fit(y).classes_, 
+                yticklabels=LabelEncoder().fit(y).classes_)
+    plt.title(f"Matrice de Confusion pour {model_name}")
+    plt.xlabel("Prédictions")
+    plt.ylabel("Vérités")
+    plt.show()
 
 # 1. Random Forest avec optimisation
 param_grid_rf = {'n_estimators': [100, 200, 300], 'max_depth': [None, 10, 20], 'min_samples_split': [2, 5]}
@@ -52,6 +58,7 @@ clf_rf.fit(X_train, y_train)
 y_pred_rf = clf_rf.best_estimator_.predict(X_test)
 accuracy_rf = accuracy_score(y_test, y_pred_rf)
 evaluate_model(clf_rf.best_estimator_, "Random Forest")
+plot_confusion_matrix(y_test, y_pred_rf, "Random Forest")
 
 # 2. k-NN avec optimisation
 param_grid_knn = {'n_neighbors': [3, 5, 7, 9], 'weights': ['uniform', 'distance']}
@@ -60,6 +67,7 @@ clf_knn.fit(X_train, y_train)
 y_pred_knn = clf_knn.best_estimator_.predict(X_test)
 accuracy_knn = accuracy_score(y_test, y_pred_knn)
 evaluate_model(clf_knn.best_estimator_, "KNN")
+plot_confusion_matrix(y_test, y_pred_knn, "KNN")
 
 # 3. Decision Tree avec optimisation
 param_grid_dt = {'max_depth': [None, 10, 20], 'min_samples_split': [2, 5, 10]}
@@ -68,6 +76,7 @@ clf_dt.fit(X_train, y_train)
 y_pred_dt = clf_dt.best_estimator_.predict(X_test)
 accuracy_dt = accuracy_score(y_test, y_pred_dt)
 evaluate_model(clf_dt.best_estimator_, "Decision Tree")
+plot_confusion_matrix(y_test, y_pred_dt, "Decision Tree")
 
 # 4. MLP avec optimisation et corrections de convergence
 param_grid_mlp = {'hidden_layer_sizes': [(50,), (100,), (50, 50)], 'alpha': [0.0001, 0.001, 0.01], 'solver': ['adam', 'sgd', 'lbfgs']}
@@ -76,6 +85,7 @@ clf_mlp.fit(X_train, y_train)
 y_pred_mlp = clf_mlp.best_estimator_.predict(X_test)
 accuracy_mlp = accuracy_score(y_test, y_pred_mlp)
 evaluate_model(clf_mlp.best_estimator_, "MLP")
+plot_confusion_matrix(y_test, y_pred_mlp, "MLP")
 
 # 5. Minimal Distance Method (MDM)
 clf_mdm = NearestCentroid()
@@ -83,25 +93,7 @@ clf_mdm.fit(X_train, y_train)
 y_pred_mdm = clf_mdm.predict(X_test)
 accuracy_mdm = accuracy_score(y_test, y_pred_mdm)
 evaluate_model(clf_mdm, "MDM")
-
-import seaborn as sns
-
-# Analyse des erreurs de classification
-conf_matrix = confusion_matrix(y_test, y_pred_rf)
-
-# Affichage de la matrice de confusion sous forme de schéma
-plt.figure(figsize=(10, 8))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=LabelEncoder().fit(y).classes_, yticklabels=LabelEncoder().fit(y).classes_)
-plt.title("Matrice de Confusion pour Random Forest")
-plt.xlabel("Prédictions")
-plt.ylabel("Vérités")
-plt.show()
-
-# Genres les plus confondus (si nécessaire)
-misclassified = np.argmax(conf_matrix - np.eye(len(conf_matrix)) * conf_matrix, axis=1)
-for i, genre in enumerate(LabelEncoder().fit(y).classes_):
-    print(f"{genre} est souvent confondu avec {LabelEncoder().fit(y).classes_[misclassified[i]]}")
-
+plot_confusion_matrix(y_test, y_pred_mdm, "MDM")
 
 # Comparaison des modèles
 models = ["Random Forest", "KNN", "Decision Tree", "MLP", "MDM"]
