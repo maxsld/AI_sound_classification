@@ -84,13 +84,24 @@ y_pred_mdm = clf_mdm.predict(X_test)
 accuracy_mdm = accuracy_score(y_test, y_pred_mdm)
 evaluate_model(clf_mdm, "MDM")
 
+import seaborn as sns
+
 # Analyse des erreurs de classification
 conf_matrix = confusion_matrix(y_test, y_pred_rf)
-print("Confusion Matrix for Random Forest:\n", conf_matrix)
-print("Genres les plus confondus:")
+
+# Affichage de la matrice de confusion sous forme de schéma
+plt.figure(figsize=(10, 8))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=LabelEncoder().fit(y).classes_, yticklabels=LabelEncoder().fit(y).classes_)
+plt.title("Matrice de Confusion pour Random Forest")
+plt.xlabel("Prédictions")
+plt.ylabel("Vérités")
+plt.show()
+
+# Genres les plus confondus (si nécessaire)
 misclassified = np.argmax(conf_matrix - np.eye(len(conf_matrix)) * conf_matrix, axis=1)
 for i, genre in enumerate(LabelEncoder().fit(y).classes_):
     print(f"{genre} est souvent confondu avec {LabelEncoder().fit(y).classes_[misclassified[i]]}")
+
 
 # Comparaison des modèles
 models = ["Random Forest", "KNN", "Decision Tree", "MLP", "MDM"]
