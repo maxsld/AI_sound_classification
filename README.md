@@ -34,7 +34,7 @@ Ce projet vise à classifier automatiquement les genres musicaux en utilisant le
 ## Utilisation
 1. **Cloner le dépôt**
    ```bash
-   git clone <URL_du_repo>
+   git clone https://github.com/maxsld/AI_sound_classification
    cd AI_sound_classification
    ```
 2. **Exécuter le script de classification**
